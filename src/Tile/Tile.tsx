@@ -14,12 +14,17 @@ const Tile = ({ value, handleClick, handleRightClick }: TileProps) => {
         handleRightClick(value);
     };
 
+    const determineContent = () => {
+        if(value === -3) return '🚩';
+        if(value === -4) return '💀';
+    }
+
     return (
         <button 
             className="tile" 
             onClick={handleClick}
             onContextMenu={onRightClick}>
-            {value === -3 ? '🚩'  : value === -1 ? '' : value}
+            {determineContent()}
         </button>
     );
 };

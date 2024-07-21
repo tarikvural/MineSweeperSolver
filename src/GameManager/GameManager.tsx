@@ -37,14 +37,14 @@ function GameManager({ width, height, resetTrigger, mines }: GameManagerProps) {
         if(i === height-1) lowerEdge = true;
         if(j === width-1) rightEdge = true;
         
-        if(!upperEdge && flags[getIndexFromRowAndCol(i-1,j)]) minesAround++;
-        if(!leftEdge && flags[getIndexFromRowAndCol(i,j-1)]) minesAround++;
-        if(!lowerEdge && flags[getIndexFromRowAndCol(i+1,j)]) minesAround++;
-        if(!rightEdge && flags[getIndexFromRowAndCol(i,j+1)]) minesAround++;
-        if(!upperEdge && !leftEdge && flags[getIndexFromRowAndCol(i-1,j-1)]) minesAround++;
-        if(!upperEdge && !rightEdge && flags[getIndexFromRowAndCol(i-1,j+1)]) minesAround++;
-        if(!lowerEdge && !leftEdge && flags[getIndexFromRowAndCol(i+1,j-1)]) minesAround++;
-        if(!lowerEdge && !rightEdge && flags[getIndexFromRowAndCol(i+1,j+1)]) minesAround++;
+        if(!upperEdge && getFlagValueAtPosition(i-1,j)) minesAround++;
+        if(!leftEdge && getFlagValueAtPosition(i,j-1)) minesAround++;
+        if(!lowerEdge && getFlagValueAtPosition(i+1,j)) minesAround++;
+        if(!rightEdge && getFlagValueAtPosition(i,j+1)) minesAround++;
+        if(!upperEdge && !leftEdge && getFlagValueAtPosition(i-1,j-1)) minesAround++;
+        if(!upperEdge && !rightEdge && getFlagValueAtPosition(i-1,j+1)) minesAround++;
+        if(!lowerEdge && !leftEdge && getFlagValueAtPosition(i+1,j-1)) minesAround++;
+        if(!lowerEdge && !rightEdge && getFlagValueAtPosition(i+1,j+1)) minesAround++;
 
         return minesAround;
     }
@@ -54,7 +54,7 @@ function GameManager({ width, height, resetTrigger, mines }: GameManagerProps) {
         return countFreeSquaresAroundHelper(colAndRow.row, colAndRow.col);
     }
 
-    // i is row, j is col
+    
     const countFreeSquaresAroundHelper = (i: number, j: number): number => {
         let freeSquares = 0;
         
@@ -65,17 +65,46 @@ function GameManager({ width, height, resetTrigger, mines }: GameManagerProps) {
         if(i === height-1) lowerEdge = true;
         if(j === width-1) rightEdge = true;
         
-        if(!upperEdge && tileValues[getIndexFromRowAndCol(i-1,j)]==-1) freeSquares++;
-        if(!lowerEdge && tileValues[getIndexFromRowAndCol(i+1,j)]==-1) freeSquares++;
-        if(!leftEdge && tileValues[getIndexFromRowAndCol(i,j-1)]==-1) freeSquares++;
-        if(!rightEdge && tileValues[getIndexFromRowAndCol(i,j+1)]==-1) freeSquares++;
-        if(!leftEdge && !upperEdge && tileValues[getIndexFromRowAndCol(i-1,j-1)]==-1) freeSquares++;
-        if(!upperEdge && !rightEdge && tileValues[getIndexFromRowAndCol(i-1,j+1)]==-1) freeSquares++;
-        if(!leftEdge && !lowerEdge && tileValues[getIndexFromRowAndCol(i+1,j-1)]==-1) freeSquares++;
-        if(!lowerEdge && !rightEdge && tileValues[getIndexFromRowAndCol(i+1,j+1)]==-1) freeSquares++;
+        if(!upperEdge && getTileValueAtPosition(i-1,j)==-1) freeSquares++;
+        if(!lowerEdge && getTileValueAtPosition(i+1,j)==-1) freeSquares++;
+        if(!leftEdge && getTileValueAtPosition(i,j-1)==-1) freeSquares++;
+        if(!rightEdge && getTileValueAtPosition(i,j+1)==-1) freeSquares++;
+        if(!leftEdge && !upperEdge && getTileValueAtPosition(i-1,j-1)==-1) freeSquares++;
+        if(!upperEdge && !rightEdge && getTileValueAtPosition(i-1,j+1)==-1) freeSquares++;
+        if(!leftEdge && !lowerEdge && getTileValueAtPosition(i+1,j-1)==-1) freeSquares++;
+        if(!lowerEdge && !rightEdge && getTileValueAtPosition(i+1,j+1)==-1) freeSquares++;
 
         console.log(freeSquares);
         return freeSquares;
+    }
+
+     // A boundry square is an unopened square with opened squares near it.
+    const isBoundry = (index: number): boolean => {
+        const colAndRow = getRowAndColFromIndex(index);
+        return isBoundryHelper(colAndRow.row, colAndRow.col);
+    }
+
+     // A boundry square is an unopened square with opened squares near it.
+    const isBoundryHelper = (i: number, j: number): boolean => {
+        if(getTileValueAtPosition(i,j) !== -1) return false;
+        let isBoundry: boolean = false, upperEdge:boolean = false, lowerEdge:boolean = false, leftEdge:boolean = false, rightEdge:boolean = false;
+        
+        
+        if(i == 0) upperEdge = true;
+        if(j == 0) leftEdge = true;
+        if(i == height-1) lowerEdge = true;
+        if(j == width-1) rightEdge = true;
+        
+        if(!upperEdge && getTileValueAtPosition(i-1,j)>=0) isBoundry = true;
+        if(!leftEdge && getTileValueAtPosition(i,j-1)>=0) isBoundry = true;
+        if(!lowerEdge && getTileValueAtPosition(i+1,j)>=0) isBoundry = true;
+        if(!rightEdge && getTileValueAtPosition(i,j+1)>=0) isBoundry = true;
+        if(!upperEdge && !leftEdge && getTileValueAtPosition(i-1,j-1)>=0) isBoundry = true;
+        if(!upperEdge && !rightEdge && getTileValueAtPosition(i-1,j+1)>=0) isBoundry = true;
+        if(!lowerEdge && !leftEdge && getTileValueAtPosition(i+1,j-1)>=0) isBoundry = true;
+        if(!lowerEdge && !rightEdge && getTileValueAtPosition(i+1,j+1)>=0) isBoundry = true;
+
+        return isBoundry;
     }
 
     useEffect(() => {
@@ -89,22 +118,79 @@ function GameManager({ width, height, resetTrigger, mines }: GameManagerProps) {
 
     const handleTileClicked = (index: number) => {
         setTileValues(prev => {
-        const newTileValues = [...prev];
-        if (prev[index] === -3) return prev;
-        newTileValues[index] = (newTileValues[index] + 1) % 9;
-        return newTileValues;
+            const newTileValues = [...prev];
+            if (prev[index] === -3) return prev;
+            newTileValues[index] = (newTileValues[index] + 1) % 9;
+            return newTileValues;
         });
     };
+
+    const getFlagValueAtPosition = (i: number, j: number): boolean => {
+        return flags[getIndexFromRowAndCol(i,j)];
+    }
+
+    const getTileValueAtPosition = (i: number, j: number): number => {
+        return tileValues[getIndexFromRowAndCol(i,j)];
+    }
+
+    const flagOn = (i: number, j: number) => {
+        setTileValues(prev => {
+            const newTileValues = [...prev];
+            newTileValues[getIndexFromRowAndCol(i,j)] = -4;
+            return newTileValues;
+        });
+    }
+
+    // Marks squares where unchecked squares around it = its number
+    const attemptToFlagMines = () => {
+        for(let i=0; i<height; i++){
+            for(let j=0; j<width; j++){
+              
+              if(getTileValueAtPosition(i,j) >= 1){
+                const curNum = getTileValueAtPosition(i,j);
+      
+                // Flag necessary squares
+                if(curNum == countFreeSquaresAroundHelper(i,j)){
+                  for(let ii=0; ii<height; ii++){
+                    for(let jj=0; jj<width; jj++){
+                      if(Math.abs(ii-i)<=1 && Math.abs(jj-j)<=1){
+                        if(getTileValueAtPosition(ii,jj) == -1 && !getFlagValueAtPosition(ii,jj)){
+                            setFlags(prev => {
+                                const newFlags = [...prev];
+                                newFlags[getIndexFromRowAndCol(ii,jj)] = true;
+                                return newFlags;
+                            });
+                            // mark flags on screen
+                            flagOn(ii,jj);
+                        }
+                      }
+                    }
+                  }
+                }
+      
+      
+              }
+            }
+          }
+    }
 
     const handleTileRightClicked = (index: number) => {
         setTileValues(prev => {
         const newTileValues = [...prev];
         if(prev[index] === -3){
             newTileValues[index] = -1;
-            flags[index] = false;
+            setFlags(prev => {
+                const newFlags = [...prev];
+                newFlags[index] = false;
+                return newFlags;
+            });
         } else {
             newTileValues[index] = -3;
-            flags[index] = true;
+            setFlags(prev => {
+                const newFlags = [...prev];
+                newFlags[index] = true;
+                return newFlags;
+            });
         }
         return newTileValues;
         });
