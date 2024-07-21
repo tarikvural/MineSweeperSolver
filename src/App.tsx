@@ -9,6 +9,7 @@ function App() {
   const [height, setHeight] = useState(6);
   const [mines, setMines] = useState(6);
   const [resetTrigger, setResetTrigger] = useState(0);
+  const [solveTrigger, setSolveTrigger] = useState(0);
 
   const handleWidthInputChange = (event: React.ChangeEvent<HTMLInputElement>) => { 
     setWidth(parseInt(event.target.value));
@@ -23,12 +24,13 @@ function App() {
   };
 
   const handleSolveClick = () => {
-    console.log('Solve clicked');
+    setSolveTrigger(prev => prev + 1);
   };
 
   const handleMineInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setMines(parseInt(event.target.value));
   }
+  
 
   return (
     <>
@@ -45,6 +47,7 @@ function App() {
         width={width}
         height={height}
         resetTrigger={resetTrigger}
+        solveTrigger={solveTrigger}
       />
       <SolveReset 
         handleSolveClick={handleSolveClick}

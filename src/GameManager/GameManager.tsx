@@ -6,12 +6,34 @@ interface GameManagerProps {
     height: number;
     resetTrigger: number;
     mines: number;
+    solveTrigger: number;
 }
 
-function GameManager({ width, height, resetTrigger, mines }: GameManagerProps) {
+function GameManager({ width, height, resetTrigger, mines, solveTrigger }: GameManagerProps) {
 
     const [tileValues, setTileValues] = useState<number[]>([]);
     const [flags, setFlags] = useState<boolean[]>([]);
+
+    useEffect(() => {
+        const resetGame = () => {
+            const initialTileValues = Array.from({ length: width * height }, () => -1);
+            const initialFlags = Array.from({ length: width * height }, () => false);
+            setFlags(initialFlags);
+            setTileValues(initialTileValues);
+            console.log('resetting game');
+        };
+        resetGame();
+    }, [width, height, resetTrigger, mines]);
+
+    useEffect(() => {
+        const solveGame = () => {
+            findMove();
+            attemptToFlagMines();
+        }
+        solveGame();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [solveTrigger]);
+
 
 
     const getRowAndColFromIndex = (index: number): {row: number, col: number} => {
@@ -20,11 +42,6 @@ function GameManager({ width, height, resetTrigger, mines }: GameManagerProps) {
 
     const getIndexFromRowAndCol = (row: number,col: number): number => {
         return row * width + col;
-    }
-
-    const countFlagsAround = (index: number) : number => {
-        const colAndRow = getRowAndColFromIndex(index);
-        return countFlagsAroundHelper(colAndRow.row, colAndRow.col); 
     }
 
     const countFlagsAroundHelper = (i: number, j: number): number => {
@@ -48,11 +65,6 @@ function GameManager({ width, height, resetTrigger, mines }: GameManagerProps) {
 
         return minesAround;
     }
-    
-    const countFreeSquaresAround = (index: number): number => {
-        const colAndRow = getRowAndColFromIndex(index);
-        return countFreeSquaresAroundHelper(colAndRow.row, colAndRow.col);
-    }
 
     
     const countFreeSquaresAroundHelper = (i: number, j: number): number => {
@@ -73,8 +85,6 @@ function GameManager({ width, height, resetTrigger, mines }: GameManagerProps) {
         if(!upperEdge && !rightEdge && getTileValueAtPosition(i-1,j+1)==-1) freeSquares++;
         if(!leftEdge && !lowerEdge && getTileValueAtPosition(i+1,j-1)==-1) freeSquares++;
         if(!lowerEdge && !rightEdge && getTileValueAtPosition(i+1,j+1)==-1) freeSquares++;
-
-        console.log(freeSquares);
         return freeSquares;
     }
 
@@ -107,19 +117,15 @@ function GameManager({ width, height, resetTrigger, mines }: GameManagerProps) {
         return isBoundry;
     }
 
-    useEffect(() => {
-        resetGame();
-    }, [width, height, resetTrigger,mines]);
+    
 
-    const resetGame = () => {
-        const initialTileValues = Array.from({ length: width * height }, () => -1);
-        setTileValues(initialTileValues);
-    };
+  
 
     const handleTileClicked = (index: number) => {
         setTileValues(prev => {
             const newTileValues = [...prev];
             if (prev[index] === -3) return prev;
+            if(prev[index] === -5) newTileValues[index] = -1;
             newTileValues[index] = (newTileValues[index] + 1) % 9;
             return newTileValues;
         });
@@ -133,7 +139,7 @@ function GameManager({ width, height, resetTrigger, mines }: GameManagerProps) {
         return tileValues[getIndexFromRowAndCol(i,j)];
     }
 
-    const flagOn = (i: number, j: number) => {
+    const markBomb = (i: number, j: number) => {
         setTileValues(prev => {
             const newTileValues = [...prev];
             newTileValues[getIndexFromRowAndCol(i,j)] = -4;
@@ -141,35 +147,119 @@ function GameManager({ width, height, resetTrigger, mines }: GameManagerProps) {
         });
     }
 
+    const markAsSafe = (i: number, j: number) => {
+        setTileValues(prev => {
+            const newTileValues = [...prev];
+            newTileValues[getIndexFromRowAndCol(i,j)] = -5;
+            return newTileValues;
+        });
+    }
+
+    const findMove = () => {
+        let success: boolean = false;
+
+        for(let i = 0; i < height; i++){
+            for(let j = 0;j < width; j++) {
+                if(getTileValueAtPosition(i,j) >=1) {
+                    const currentValue = getTileValueAtPosition(i,j);
+                    const minesAround = countFlagsAroundHelper(i,j);
+                    const freeSquaresAround = countFreeSquaresAroundHelper(i,j);
+                    if(currentValue === minesAround && freeSquaresAround > 0){
+                        success = true;
+                        
+                        let upperEdge:boolean = false, lowerEdge:boolean = false, leftEdge:boolean = false, rightEdge:boolean = false;
+
+                        if(i === 0) upperEdge = true;
+                        if(j === 0) leftEdge = true;
+                        if(i === height-1) lowerEdge = true;
+                        if(j === width-1) rightEdge = true;
+
+                        if(!upperEdge && ! leftEdge && getTileValueAtPosition(i-1,j-1) === -1 && !getFlagValueAtPosition(i-1,j-1)){
+                            console.log('marking upper left as safe from position', i, j);
+                            markAsSafe(i-1,j-1);
+                        }
+                        if(!upperEdge && getTileValueAtPosition(i-1,j) === -1 && !getFlagValueAtPosition(i-1,j)){
+                            console.log('marking upper as safe from position', i, j);
+                            markAsSafe(i-1,j);
+                        }
+                        if(!upperEdge && !rightEdge && getTileValueAtPosition(i-1,j+1) === -1 && !getFlagValueAtPosition(i-1,j+1)){
+                            console.log('marking upper right as safe from position', i, j);
+                            markAsSafe(i-1,j+1);
+                        }
+                        if(!leftEdge && getTileValueAtPosition(i,j-1) === -1 && !getFlagValueAtPosition(i,j-1)){
+                            console.log('marking left as safe from position', i, j);
+                            markAsSafe(i,j-1);
+                        } 
+                        if(!rightEdge && getTileValueAtPosition(i,j+1) === -1 && !getFlagValueAtPosition(i,j+1)){
+                            console.log('marking right as safe from position', i, j);
+                            markAsSafe(i,j+1);
+                        } 
+                        if(!lowerEdge && !leftEdge && getTileValueAtPosition(i+1,j-1) === -1 && !getFlagValueAtPosition(i+1,j-1)){
+                            console.log('marking lower left as safe from position', i, j);
+                            markAsSafe(i+1,j-1);
+                        }
+                        if(!lowerEdge && getTileValueAtPosition(i+1,j) === -1 && !getFlagValueAtPosition(i+1,j)){
+                            console.log('marking lower as safe from position', i, j);
+                            markAsSafe(i+1,j);
+                        }
+                        if(!lowerEdge && !rightEdge && getTileValueAtPosition(i+1,j+1) === -1 && !getFlagValueAtPosition(i+1,j+1)){
+                            console.log('marking lower right as safe from position', i, j);
+                            markAsSafe(i+1,j+1);
+                        }
+                    }
+                }
+            }
+        }
+        if(success) return;
+
+        //tankSolver();
+    }
+
+
     // Marks squares where unchecked squares around it = its number
     const attemptToFlagMines = () => {
         for(let i=0; i<height; i++){
             for(let j=0; j<width; j++){
-              
-              if(getTileValueAtPosition(i,j) >= 1){
-                const curNum = getTileValueAtPosition(i,j);
-      
-                // Flag necessary squares
-                if(curNum == countFreeSquaresAroundHelper(i,j)){
-                  for(let ii=0; ii<height; ii++){
-                    for(let jj=0; jj<width; jj++){
-                      if(Math.abs(ii-i)<=1 && Math.abs(jj-j)<=1){
-                        if(getTileValueAtPosition(ii,jj) == -1 && !getFlagValueAtPosition(ii,jj)){
-                            setFlags(prev => {
-                                const newFlags = [...prev];
-                                newFlags[getIndexFromRowAndCol(ii,jj)] = true;
-                                return newFlags;
-                            });
-                            // mark flags on screen
-                            flagOn(ii,jj);
+                if(getTileValueAtPosition(i,j) >= 1){
+                    const curNum = getTileValueAtPosition(i,j);
+                    
+                    // Flag necessary squares
+                    if(curNum === countFreeSquaresAroundHelper(i,j) && !(curNum == countFlagsAroundHelper(i,j))){
+
+                        // flag all square around it
+                        let upperEdge:boolean = false, lowerEdge:boolean = false, leftEdge:boolean = false, rightEdge:boolean = false;
+        
+                        if(i === 0) upperEdge = true;
+                        if(j === 0) leftEdge = true;
+                        if(i === height-1) lowerEdge = true;
+                        if(j === width-1) rightEdge = true;
+
+                        if(!upperEdge && !leftEdge && getTileValueAtPosition(i-1,j-1) === -1 && !getFlagValueAtPosition(i-1,j-1)){
+                            markBomb(i-1,j-1);
+                        } 
+                        if(!upperEdge && getTileValueAtPosition(i-1,j) === -1 && !getFlagValueAtPosition(i-1,j)){
+                            markBomb(i-1,j);
+                        } 
+                        if(!upperEdge && !rightEdge && getTileValueAtPosition(i-1,j+1) === -1 && !getFlagValueAtPosition(i-1,j+1)){
+                            markBomb(i-1,j+1);
+                        } 
+                        if(!leftEdge && getTileValueAtPosition(i,j-1) === -1 && !getFlagValueAtPosition(i,j-1)){
+                            markBomb(i,j-1);
+                        } 
+                        if(!rightEdge && getTileValueAtPosition(i,j+1) === -1 && !getFlagValueAtPosition(i,j+1)){
+                            markBomb(i,j+1);
                         }
-                      }
+                        if(!lowerEdge && !leftEdge && getTileValueAtPosition(i+1,j-1) === -1 && !getFlagValueAtPosition(i+1,j-1)){
+                            markBomb(i+1,j-1);
+                        } 
+                        if(!lowerEdge && getTileValueAtPosition(i+1,j) === -1 && !getFlagValueAtPosition(i+1,j)){
+                            markBomb(i+1,j);
+                        } 
+                        if(!lowerEdge && !rightEdge && getTileValueAtPosition(i+1,j+1) === -1 && !getFlagValueAtPosition(i+1,j+1)){
+                            markBomb(i+1,j+1);
+                        }
                     }
-                  }
                 }
-      
-      
-              }
             }
           }
     }
