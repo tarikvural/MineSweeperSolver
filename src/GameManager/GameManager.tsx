@@ -224,7 +224,7 @@ function GameManager({ width, height, resetTrigger, mines, solveTrigger }: GameM
                     const curNum = getTileValueAtPosition(i,j);
                     
                     // Flag necessary squares
-                    if(curNum === countFreeSquaresAroundHelper(i,j) && !(curNum == countFlagsAroundHelper(i,j))){
+                    if((curNum-countFlagsAroundHelper(i,j)) === countFreeSquaresAroundHelper(i,j)/* && !(curNum == countFlagsAroundHelper(i,j))*/){
 
                         // flag all square around it
                         let upperEdge:boolean = false, lowerEdge:boolean = false, leftEdge:boolean = false, rightEdge:boolean = false;
@@ -235,27 +235,35 @@ function GameManager({ width, height, resetTrigger, mines, solveTrigger }: GameM
                         if(j === width-1) rightEdge = true;
 
                         if(!upperEdge && !leftEdge && getTileValueAtPosition(i-1,j-1) === -1 && !getFlagValueAtPosition(i-1,j-1)){
+                            console.log('setting upper left as bomb from position', i, j);
                             markBomb(i-1,j-1);
                         } 
                         if(!upperEdge && getTileValueAtPosition(i-1,j) === -1 && !getFlagValueAtPosition(i-1,j)){
+                            console.log('setting upper as bomb from position', i, j);
                             markBomb(i-1,j);
                         } 
                         if(!upperEdge && !rightEdge && getTileValueAtPosition(i-1,j+1) === -1 && !getFlagValueAtPosition(i-1,j+1)){
+                            console.log('setting upper right as bomb from position', i, j);
                             markBomb(i-1,j+1);
                         } 
                         if(!leftEdge && getTileValueAtPosition(i,j-1) === -1 && !getFlagValueAtPosition(i,j-1)){
+                            console.log('setting left as bomb from position', i, j);
                             markBomb(i,j-1);
                         } 
                         if(!rightEdge && getTileValueAtPosition(i,j+1) === -1 && !getFlagValueAtPosition(i,j+1)){
+                            console.log('setting right as bomb from position', i, j);
                             markBomb(i,j+1);
                         }
                         if(!lowerEdge && !leftEdge && getTileValueAtPosition(i+1,j-1) === -1 && !getFlagValueAtPosition(i+1,j-1)){
+                            console.log('setting lower left as bomb from position', i, j);
                             markBomb(i+1,j-1);
                         } 
                         if(!lowerEdge && getTileValueAtPosition(i+1,j) === -1 && !getFlagValueAtPosition(i+1,j)){
+                            console.log('setting lower as bomb from position', i, j);
                             markBomb(i+1,j);
                         } 
                         if(!lowerEdge && !rightEdge && getTileValueAtPosition(i+1,j+1) === -1 && !getFlagValueAtPosition(i+1,j+1)){
+                            console.log('setting lower right as bomb from position', i, j);
                             markBomb(i+1,j+1);
                         }
                     }

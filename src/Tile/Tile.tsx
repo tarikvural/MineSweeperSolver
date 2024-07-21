@@ -16,7 +16,6 @@ const Tile = ({ value, handleClick, handleRightClick, key }: TileProps) => {
     };
 
     const determineContent = () => {
-        console.log('setting content of', key, 'to:', value);
         if(value === -3) return '🚩';
         if(value === -4) return '💀';
         if(value === -5) return '✅';
