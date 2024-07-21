@@ -8,6 +8,11 @@
 #setup-container label {
     margin-right: 10px;
 }
+
 #width-input {
+    margin-right: 1rem;
+}
+
+#height-input {
     margin-right: 1rem;
 }
