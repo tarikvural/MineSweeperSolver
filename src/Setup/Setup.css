@@ -1,0 +1,13 @@
+#setup-container {
+    margin-bottom: 2rem;
+    display: flex;
+    justify-content: center;
+    align-content: center;
+}
+
+#setup-container label {
+    margin-right: 10px;
+}
+#width-input {
+    margin-right: 1rem;
+}

@@ -1,0 +1,24 @@
+#solve-reset-button-container {
+    margin-top: 5rem;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+#solve-reset-button-container button {
+    margin: 0 4rem;
+    font-size: 3rem;
+    border-radius: 5%;
+    background-color: #2d0830;;
+    color: #f6f4f663;
+}
+
+#reset-button:hover {
+    background-color: #6a1115;
+    border-color: #ffffff;
+}
+
+#solve-button:hover {
+    background-color: #8b1a82;
+    border-color: #ffffff;
+}

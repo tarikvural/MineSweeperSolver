@@ -1,4 +1,5 @@
 import React from 'react';
+import './Setup.css';
 
 interface SetupProps {
     width: number;
@@ -9,9 +10,9 @@ interface SetupProps {
 
 const Setup = ({width, height, handleWidthInputChange, handleHeightInputChange} : SetupProps ) => {
     return (
-        <div>
+        <div id='setup-container'>
             <label htmlFor='height-input'>Width:</label>
-            <input type="number" value={width} id='width-input' onChange={handleWidthInputChange}></input>
+            <input type="number" value={width} id='width-input' onChange={handleWidthInputChange} ></input>
             <label htmlFor='height-input'>Height:</label>
             <input type="number" value={height} id='height-input' onChange={handleHeightInputChange}></input>
         </div>
